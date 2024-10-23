@@ -9,6 +9,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.viewpager2.widget.ViewPager2
 import com.example.viewpager2sample.databinding.ActivityMainBinding
 
@@ -26,16 +27,44 @@ class MainActivity : AppCompatActivity() {
         val pagerAdapter = SplashPagerAdapter(this)
         viewPager.adapter = pagerAdapter
 
-        // Optional: Add dots indicator or enable swipe only for onboarding pages.
+        // Apply custom animation
+        viewPager.setPageTransformer(ZoomOutPageTransformer())
+
+        // Optional: Disable swiping on the last page (Sign-in page)
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
-                // Handle page change events if needed
+                if (position == 3) {
+                    viewPager.isUserInputEnabled = false // Disable swiping on the sign-in page
+                } else {
+                    viewPager.isUserInputEnabled = true // Enable swiping for onboarding pages
+                }
             }
         })
+    }
+    // Define ZoomOutPageTransformer inside MainActivity
+    class ZoomOutPageTransformer : ViewPager2.PageTransformer {
+        override fun transformPage(view: View, position: Float) {
+            view.apply {
+                val scaleFactor = Math.max(0.85f, 1 - Math.abs(position))
+                val pageWidth = width
+                val pageHeight = height
+                alpha = if (position <= -1 || position >= 1) {
+                    0f
+                } else {
+                    1f
+                }
 
-        viewPager.setPageTransformer { page, position ->
-            page.alpha = 0.25f + (1 - Math.abs(position))
+                scaleX = scaleFactor
+                scaleY = scaleFactor
+
+                val verticalMargin = pageHeight * (1 - scaleFactor) / 2
+                val horizontalMargin = pageWidth * (1 - scaleFactor) / 2
+                translationX = if (position < 0) {
+                    horizontalMargin - verticalMargin / 2
+                } else {
+                    horizontalMargin + verticalMargin / 2
+                }
+            }
         }
-
     }
 }
